@@ -1,31 +1,53 @@
 import React, { useEffect, useRef } from "react";
-import MessageBubble from "./MessageBubble";
-import { ChatMessage } from "../../types/types";
 
-interface ChatMessagesProps {
-  messages: ChatMessage[];
-  isStreaming?: boolean;
-}
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+};
+
+type ChatMessagesProps = {
+  messages: Message[];
+  isStreaming: boolean;
+};
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
   messages,
   isStreaming,
 }) => {
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isStreaming]);
 
   return (
-    <div className="flex flex-col gap-4 px-4 py-6 overflow-y-auto h-full">
-      {messages.map(({ id, role, content }) => (
-        <MessageBubble key={id} role={role} content={content} />
+    <div className="flex flex-col gap-4 p-4 h-[80vh] overflow-y-auto bg-gray-100">
+      {messages.map((msg) => (
+        <div
+          key={msg.id}
+          className={`p-3 rounded-lg max-w-[80%] ${
+            msg.role === "user"
+              ? "bg-blue-500 text-white self-end"
+              : "bg-gray-300 text-black self-start"
+          }`}
+        >
+          {msg.content}
+        </div>
       ))}
 
-      {isStreaming && <MessageBubble role="assistant" content="Typing..." />}
+      {/* Typing Indicator */}
+      {isStreaming && (
+        <div className="self-start bg-gray-300 text-black p-3 rounded-lg max-w-[80%] flex items-center gap-2">
+          <span className="typing-dots">
+            <span className="dot">.</span>
+            <span className="dot">.</span>
+            <span className="dot">.</span>
+          </span>
+        </div>
+      )}
 
-      <div ref={bottomRef} />
+      <div ref={messagesEndRef} />
     </div>
   );
 };

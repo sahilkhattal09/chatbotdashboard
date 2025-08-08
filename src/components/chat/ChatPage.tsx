@@ -21,6 +21,12 @@ const ChatPage = ({ chatId: initialChatId }: ChatPageProps) => {
   );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  const handleStopStreaming = () => {
+    // Call your backend logic to stop streaming
+    setIsStreaming(false);
+  };
 
   // Fetch chat sessions
   useEffect(() => {
@@ -99,13 +105,13 @@ const ChatPage = ({ chatId: initialChatId }: ChatPageProps) => {
 
     setMessages((prev) => [...prev, newMessage]);
     setIsSending(true);
+    setIsStreaming(true); // ✅ Add this
 
     try {
       const res = await axios.post(`${BASE_URL}/chat/${activeChatId}/message`, {
         message: userMessage,
       });
 
-      // Backend returns plain markdown text response here
       const assistantContent = res.data;
 
       const assistantMessage: ChatMessage = {
@@ -119,6 +125,7 @@ const ChatPage = ({ chatId: initialChatId }: ChatPageProps) => {
       console.error("Failed to send message", err);
     } finally {
       setIsSending(false);
+      setIsStreaming(false); // ✅ Also important to stop the stream
     }
   };
 
@@ -135,10 +142,15 @@ const ChatPage = ({ chatId: initialChatId }: ChatPageProps) => {
 
       <div className="flex flex-col flex-1">
         <div className="flex-1 overflow-y-auto p-4">
-          <ChatMessages messages={messages} />
+          <ChatMessages messages={messages} isStreaming={isStreaming} />
         </div>
         <div className="border-t p-4">
-          <MessageInput onSend={handleSendMessage} isLoading={isSending} />
+          <MessageInput
+            onSend={handleSendMessage}
+            onStop={handleStopStreaming}
+            isLoading={isSending}
+            isStreaming={isStreaming}
+          />
         </div>
       </div>
     </div>
